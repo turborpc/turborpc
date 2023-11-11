@@ -1,0 +1,76 @@
+const datePrefix = "{{.DatePrefix}}";
+
+/**
+ * @param {string} key
+ * @param {any} value
+ * @returns {Date | any}
+ */
+function reviver(key, value) {
+	if (typeof value !== "string" || !value.startsWith(datePrefix)) {
+		return value;
+	}
+
+	const str = value.slice(datePrefix.length + 1, -1);
+	const timestamp = Date.parse(str);
+
+	if (isNaN(timestamp)) {
+		return value;
+	}
+
+	return new Date(timestamp);
+}
+
+/**
+ * @param {string} service
+ * @param {string} method
+ * @param {any} input
+ * @returns {Promise<unknown>}
+ */
+async function call(url, headers, service, method, input) {
+	const res = await fetch(url + "?service=" + service + "&method=" + method, {
+		method: "POST",
+		headers: headers,
+		body: JSON.stringify(input)
+	});
+
+	const text = await res.text();
+	const data = JSON.parse(text, reviver);
+
+	if (res.status !== 200) {
+		throw new Error(data.message);
+	}
+
+	return data.output;
+}
+
+{{.SymbolsJSDoc}}
+
+{{range .Metadata.Services}}
+class {{.Name}} {
+	constructor(url, headers) {
+		this.name = "{{.Name}}";
+		this.url = url;
+		this.headers = headers;
+	}
+
+	{{range .Methods}}
+	{{if or (not (isVoid .Output)) (not (isVoid .Input)) -}}
+	/**
+	* {{if not (isVoid .Input)}}@param {{printf "{%s}" (typeOf .Input)}} input{{end}}
+	* {{if not (isVoid .Output)}}@returns {Promise<{{typeOf .Output}}>}{{end}}
+	*/
+	{{end -}}
+	{{camelCase .Name}}{{if (isVoid .Input)}}(){{else}}(input){{end}} {
+		return {{if not (isVoid .Output)}}/** @type {Promise<{{typeOf .Output}}>} */{{end}}(call(this.url, this.headers, this.name, "{{.Name}}", {{if (isVoid .Input)}}null{{else}}input{{end}}));
+	}
+	{{end}}
+}
+{{end}}
+
+class {{.Metadata.Name}} {
+	constructor(url, headers) {
+		{{range .Metadata.Services -}}
+		this.{{camelCase .Name}} = new {{.Name}}(url, headers);
+		{{- end}}
+	}
+}

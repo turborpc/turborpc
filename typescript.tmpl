@@ -1,0 +1,81 @@
+const datePrefix = "{{.DatePrefix}}";
+
+function reviver(key: string, value: any): Date | any {
+	if (typeof value !== "string" || !value.startsWith(datePrefix)) {
+		return value;
+	}
+
+	const str = value.slice(datePrefix.length + 1, -1);
+	const timestamp = Date.parse(str);
+
+	if (isNaN(timestamp)) {
+		return value;
+	}
+
+	return new Date(timestamp);
+}
+
+async function call(url: string, service: string, method: string, input: any, headers?: HeadersInit): Promise<unknown> {
+	const res = await fetch(url + "?service=" + service + "&method=" + method, {
+		method: "POST",
+		headers: headers,
+		body: JSON.stringify(input)
+	});
+
+	const text = await res.text();
+	const data = JSON.parse(text, reviver);
+
+	if (res.status !== 200) {
+		if (typeof data.message === "string") {
+			throw new Error(data.message);
+		} else {
+			throw new Error("unknown error");
+		}
+	}
+
+	return data.output;
+}
+
+{{.SymbolsTypeScript}}
+
+{{range .Metadata.Services}}
+export class {{.Name}} {
+	name: string;
+	url: string;
+	headers?: HeadersInit;
+
+	constructor(url: string, headers?: HeadersInit) {
+		this.name = "{{.Name}}";
+		this.url = url;
+		this.headers = headers;
+	}
+
+	{{range .Methods -}}
+	async {{camelCase .Name}}{{if (isVoid .Input)}}(){{else}}(input: {{typeOf .Input}}){{end}}{{if not (isVoid .Output)}}: Promise<{{typeOf .Output}}>{{end}} {
+		{{if (isVoid .Output) -}}
+		await call(this.url, this.name, "{{.Name}}", {{if (isVoid .Input)}}null{{else}}input{{end}}, this.headers);
+		{{- else -}}
+		return call(this.url, this.name, "{{.Name}}", {{if (isVoid .Input)}}null{{else}}input{{end}}, this.headers) as Promise<{{typeOf .Output}}>;
+		{{- end}}
+	}
+	{{end}}
+}
+{{end}}
+
+export class {{.Metadata.Name}} {
+	url: string;
+	headers?: HeadersInit;
+
+	{{range .Metadata.Services -}}
+	{{camelCase .Name}}: {{.Name}};
+	{{- end}}
+
+	constructor(url: string, headers?: HeadersInit) {
+		this.url = url;
+		this.headers = headers;
+
+		{{range .Metadata.Services -}}
+		this.{{camelCase .Name}} = new {{.Name}}(url, headers);
+		{{- end}}
+	}
+}
