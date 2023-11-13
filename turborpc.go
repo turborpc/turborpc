@@ -148,24 +148,34 @@ type errorResponse struct {
 	Message string `json:"message"`
 }
 
-func httpError(w http.ResponseWriter, code int, err error) {
+// Error replies to the request with the specified error message and HTTP code.
+// The format of the reply is the one expected by TurboRPC clients. It does not
+// otherwise end the request; the caller should ensure no further writes are
+// done to w.
+func Error(w http.ResponseWriter, error string, code int) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(code)
 
 	buf, _ := json.Marshal(errorResponse{
 		Status:  code,
-		Message: err.Error(),
+		Message: error,
 	})
 
 	w.Write(buf)
+}
+
+func httpError(w http.ResponseWriter, code int, err error) {
+	Error(w, err.Error(), code)
 }
 
 type outputResponse struct {
 	Output json.RawMessage `json:"output"`
 }
 
-func httpOK(w http.ResponseWriter, output []byte) {
+func httpOK(w http.ResponseWriter, output json.RawMessage) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(http.StatusOK)
 
 	buf, _ := json.Marshal(outputResponse{
