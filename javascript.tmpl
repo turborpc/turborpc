@@ -1,5 +1,15 @@
 const datePrefix = "{{.DatePrefix}}";
 
+class RPCError extends Error {
+	constructor(message, service, method) {
+		super(message);
+
+		this.name = "RPCError";
+		this.service = service;
+		this.method = method;
+	}
+}
+
 /**
  * @param {string} key
  * @param {any} value
@@ -37,7 +47,7 @@ async function call(url, headers, service, method, input) {
 	const data = JSON.parse(text, reviver);
 
 	if (res.status !== 200) {
-		throw new Error(data.message);
+		throw new RPCError(data.message, service, method);
 	}
 
 	return data.output;

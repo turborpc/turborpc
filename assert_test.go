@@ -8,7 +8,7 @@ import (
 
 func assertEqual[T comparable](t *testing.T, a T, b T, msgAndArgs ...any) bool {
 	if a != b {
-		t.Fatalf(messageFromMsgAndArgs(msgAndArgs...))
+		t.Fatalf("%v != %v: %s", a, b, messageFromMsgAndArgs(msgAndArgs...))
 	}
 
 	return true

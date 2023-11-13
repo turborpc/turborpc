@@ -139,10 +139,49 @@ func TestGeneratedJavaScriptClient(t *testing.T) {
 			code:   `(new RPC(URL)).testService1.three(0).then((res) => console.log(res))`,
 			output: "3",
 		},
+		{
+			desc: "call",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, {}, "NotFound", "Test", 0).catch((e) => console.log(e.message))`,
+			output: `could not find service "NotFound"`,
+		},
+		{
+			desc: "call",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, {}, "TestService1", "NotFound", 0).catch((e) => console.log(e.message))`,
+			output: `could not find method "NotFound"`,
+		},
+		{
+			desc: "call",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, {}, "TestService1", "Error", "test").catch((e) => console.log(e.message))`,
+			output: `test`,
+		},
+		{
+			desc: "call",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, {}, "TestService1", "Error", "test").catch((e) => console.log(e instanceof RPCError))`,
+			output: `true`,
+		},
 	}
 
 	for _, tC := range testCases {
+		tC := tC
 		t.Run(tC.desc, func(t *testing.T) {
+			t.Parallel()
+
 			filePath := fmt.Sprintf("run-%d.js", rand.Int())
 
 			rpc := NewServer(tC.serverOptions...)
@@ -235,10 +274,49 @@ func TestGeneratedTypeScriptClient(t *testing.T) {
 				"test": "1234",
 			},
 		},
+		{
+			desc: "call",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, "NotFound", "Test", 0).catch((e) => console.log(e.message))`,
+			output: `could not find service "NotFound"`,
+		},
+		{
+			desc: "call",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, "TestService1", "NotFound", 0).catch((e) => console.log(e.message))`,
+			output: `could not find method "NotFound"`,
+		},
+		{
+			desc: "call",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, "TestService1", "Error", "test").catch((e) => console.log(e.message))`,
+			output: `test`,
+		},
+		{
+			desc: "call",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, "TestService1", "Error", "test").catch((e) => console.log(e instanceof RPCError))`,
+			output: `true`,
+		},
 	}
 
 	for _, tC := range testCases {
+		tC := tC
 		t.Run(tC.desc, func(t *testing.T) {
+			t.Parallel()
+
 			filePath := fmt.Sprintf("run-%d.ts", rand.Int())
 
 			rpc := NewServer(tC.serverOptions...)

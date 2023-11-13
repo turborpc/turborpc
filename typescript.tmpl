@@ -1,5 +1,18 @@
 const datePrefix = "{{.DatePrefix}}";
 
+class RPCError extends Error {
+	readonly service: string;
+	readonly method: string;
+
+	constructor(message: string, service: string, method: string) {
+		super(message);
+
+		this.name = "RPCError";
+		this.service = service;
+		this.method = method;
+	}
+}
+
 function reviver(key: string, value: any): Date | any {
 	if (typeof value !== "string" || !value.startsWith(datePrefix)) {
 		return value;
@@ -27,9 +40,9 @@ async function call(url: string, service: string, method: string, input: any, he
 
 	if (res.status !== 200) {
 		if (typeof data.message === "string") {
-			throw new Error(data.message);
+			throw new RPCError(data.message, service, method);
 		} else {
-			throw new Error("unknown error");
+			throw new RPCError("unknown error", service, method);
 		}
 	}
 

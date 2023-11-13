@@ -131,13 +131,13 @@ func (rpc *Server) call(ctx context.Context, service string, method string, inpu
 	s, ok := rpc.services[service]
 
 	if !ok {
-		return nil, fmt.Errorf("service %q: %w", service, errServiceNotFound)
+		return nil, fmt.Errorf("%w %q", errServiceNotFound, service)
 	}
 
 	m, ok := s.methods[method]
 
 	if !ok {
-		return nil, fmt.Errorf("method %q: %w", method, errMethodNotFound)
+		return nil, fmt.Errorf("%w %q", errMethodNotFound, method)
 	}
 
 	return m.invoke(ctx, input)
