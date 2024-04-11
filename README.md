@@ -4,6 +4,8 @@
 
 TurboRPC: Combination of [tRPC](https://trpc.io) and [net/rpc](https://pkg.go.dev/net/rpc). Run Fast, Move Fast, Break Nothing.
 
+![demo](./demo.gif)
+
 [![GoDoc](https://godoc.org/github.com/turborpc/turborpc?status.svg)](https://godoc.org/github.com/turborpc/turborpc)
 ![Build Status](https://github.com/turborpc/turborpc/actions/workflows/test.yml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/turborpc/turborpc)](https://goreportcard.com/report/github.com/turborpc/turborpc)
