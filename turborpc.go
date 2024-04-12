@@ -73,18 +73,33 @@ func WithErrorFilter(filter func(err error) error) ServerOption {
 	}
 }
 
+func makeMethodLogger(printf func(format string, a ...any) (n int, err error)) func(service, method string) {
+	return func(service, method string) {
+		printf("TurboRPC ~ %s::%s\n", service, method)
+	}
+}
+
+// WithNoMethodLogger disables logging of methods when registering services.
+func WithNoMethodLogger() ServerOption {
+	return func(r *Server) {
+		r.methodLogger = nil
+	}
+}
+
 // Server represents an RPC Server.
 type Server struct {
-	errorFilter func(err error) error
-	services    map[string]*service
-	serveClient clientGenerator
+	errorFilter  func(err error) error
+	methodLogger func(service, method string)
+	services     map[string]*service
+	serveClient  clientGenerator
 }
 
 // NewServer returns a new Server with options applied.
 func NewServer(options ...ServerOption) *Server {
 	rpc := &Server{
-		errorFilter: nil,
-		services:    make(map[string]*service),
+		errorFilter:  nil,
+		methodLogger: makeMethodLogger(fmt.Printf),
+		services:     make(map[string]*service),
 	}
 
 	for _, o := range options {
@@ -136,7 +151,7 @@ func (rpc *Server) RegisterName(name string, r any) error {
 		return ErrInvalidService
 	}
 
-	rpc.services[name] = newService(name, typ, reflect.ValueOf(r))
+	rpc.services[name] = newService(name, typ, reflect.ValueOf(r), rpc.methodLogger)
 
 	return nil
 }

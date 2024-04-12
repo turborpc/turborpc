@@ -15,7 +15,7 @@ import (
 var runClientTests = os.Getenv("RUN_CLIENT_TESTS") == "yes"
 
 func testClientStability(t *testing.T, client clientGenerator) {
-	rpc := NewServer()
+	rpc := newTestServer()
 
 	rpc.Register(&TestService2{})
 	rpc.Register(&TestService1{})
@@ -57,7 +57,7 @@ func TestJavaScriptClient(t *testing.T) {
 	})
 
 	t.Run("write client", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService2{})
 		rpc.Register(&TestService1{})
@@ -78,7 +78,7 @@ func TestTypeScriptClient(t *testing.T) {
 	})
 
 	t.Run("write client", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService2{})
 		rpc.Register(&TestService1{})
@@ -184,7 +184,7 @@ func TestGeneratedJavaScriptClient(t *testing.T) {
 
 			filePath := fmt.Sprintf("run-%d.js", rand.Int())
 
-			rpc := NewServer(tC.serverOptions...)
+			rpc := newTestServer(tC.serverOptions...)
 
 			for _, s := range tC.services {
 				rpc.Register(s)
@@ -319,7 +319,7 @@ func TestGeneratedTypeScriptClient(t *testing.T) {
 
 			filePath := fmt.Sprintf("run-%d.ts", rand.Int())
 
-			rpc := NewServer(tC.serverOptions...)
+			rpc := newTestServer(tC.serverOptions...)
 
 			for _, s := range tC.services {
 				rpc.Register(s)

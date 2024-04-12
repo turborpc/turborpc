@@ -31,7 +31,7 @@ func (c *BenchmarkService) NoInputNoOutput(ctx context.Context) error {
 }
 
 func BenchmarkEcho(b *testing.B) {
-	rpc := NewServer()
+	rpc := newTestServer()
 	rpc.Register(&BenchmarkService{})
 
 	for i := 0; i < b.N; i++ {
@@ -46,7 +46,7 @@ func BenchmarkEcho(b *testing.B) {
 }
 
 func BenchmarkError(b *testing.B) {
-	rpc := NewServer()
+	rpc := newTestServer()
 	rpc.Register(&BenchmarkService{})
 
 	for i := 0; i < b.N; i++ {
@@ -61,7 +61,7 @@ func BenchmarkError(b *testing.B) {
 }
 
 func BenchmarkNoInput(b *testing.B) {
-	rpc := NewServer()
+	rpc := newTestServer()
 	rpc.Register(&BenchmarkService{})
 
 	for i := 0; i < b.N; i++ {
@@ -76,7 +76,7 @@ func BenchmarkNoInput(b *testing.B) {
 }
 
 func BenchmarkNoOutput(b *testing.B) {
-	rpc := NewServer()
+	rpc := newTestServer()
 	rpc.Register(&BenchmarkService{})
 
 	for i := 0; i < b.N; i++ {
@@ -91,7 +91,7 @@ func BenchmarkNoOutput(b *testing.B) {
 }
 
 func BenchmarkNoInputNoOutput(b *testing.B) {
-	rpc := NewServer()
+	rpc := newTestServer()
 	rpc.Register(&BenchmarkService{})
 
 	for i := 0; i < b.N; i++ {
@@ -106,7 +106,7 @@ func BenchmarkNoInputNoOutput(b *testing.B) {
 }
 
 func BenchmarkJavaScriptClient(b *testing.B) {
-	rpc := NewServer()
+	rpc := newTestServer()
 	rpc.Register(&TestService1{})
 	rpc.Register(&TestService2{})
 
@@ -116,7 +116,7 @@ func BenchmarkJavaScriptClient(b *testing.B) {
 }
 
 func BenchmarkTypeScriptClient(b *testing.B) {
-	rpc := NewServer()
+	rpc := newTestServer()
 	rpc.Register(&TestService1{})
 	rpc.Register(&TestService2{})
 

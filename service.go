@@ -17,7 +17,7 @@ type service struct {
 	methods map[string]*method
 }
 
-func newService(name string, typ reflect.Type, value reflect.Value) *service {
+func newService(name string, typ reflect.Type, value reflect.Value, logger func(service, method string)) *service {
 	s := &service{
 		name:    name,
 		typ:     typ,
@@ -33,6 +33,10 @@ func newService(name string, typ reflect.Type, value reflect.Value) *service {
 		}
 
 		s.methods[m.Name] = newMethod(m, s.value.Method(i))
+
+		if logger != nil {
+			logger(s.name, m.Name)
+		}
 	}
 
 	return s

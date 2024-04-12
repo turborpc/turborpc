@@ -131,9 +131,13 @@ func (errReader) Read(p []byte) (n int, err error) {
 	return 0, errors.New("test error")
 }
 
+func newTestServer(options ...ServerOption) *Server {
+	return NewServer(append(options, WithNoMethodLogger())...)
+}
+
 func TestServer(t *testing.T) {
 	t.Run("string echo", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestServiceEcho{})
 
@@ -144,7 +148,7 @@ func TestServer(t *testing.T) {
 	})
 
 	t.Run("pointer echo", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 
@@ -155,7 +159,7 @@ func TestServer(t *testing.T) {
 	})
 
 	t.Run("invalid", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestServiceFunction{})
 
@@ -163,7 +167,7 @@ func TestServer(t *testing.T) {
 	})
 
 	t.Run("struct echo", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestServiceEcho{})
 
@@ -184,7 +188,7 @@ func TestServer(t *testing.T) {
 
 func TestServerErrors(t *testing.T) {
 	t.Run("non post method", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 
@@ -204,7 +208,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("missing service", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 
@@ -224,7 +228,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("missing method", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 
@@ -244,7 +248,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("service not found", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 
@@ -264,7 +268,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("method not found", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 
@@ -284,7 +288,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("malformed input", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 
@@ -304,7 +308,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("no input", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestServiceEcho{})
 
@@ -324,7 +328,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("method error", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 
@@ -345,7 +349,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("register invalid service", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		type InvalidService struct {
 		}
@@ -356,7 +360,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("register duplicate service", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 		err := rpc.Register(&TestService1{})
@@ -365,7 +369,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("register reserved service", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		err := rpc.RegisterName(defaultRPCClassName, &TestService1{})
 
@@ -373,7 +377,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("cannot marshal", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestServiceFunction{})
 
@@ -393,7 +397,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("cannot read", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestServiceFunction{})
 
@@ -414,7 +418,7 @@ func TestServerErrors(t *testing.T) {
 
 	t.Run("filtered error", func(t *testing.T) {
 		e := "filtered error"
-		rpc := NewServer(WithErrorFilter(func(err error) error {
+		rpc := newTestServer(WithErrorFilter(func(err error) error {
 			return errors.New(e)
 		}))
 
@@ -437,7 +441,7 @@ func TestServerErrors(t *testing.T) {
 	})
 
 	t.Run("filtered error default", func(t *testing.T) {
-		rpc := NewServer(WithErrorFilter(func(err error) error {
+		rpc := newTestServer(WithErrorFilter(func(err error) error {
 			return nil
 		}))
 
@@ -462,7 +466,7 @@ func TestServerErrors(t *testing.T) {
 
 func TestServerOptions(t *testing.T) {
 	t.Run("serve javascript client", func(t *testing.T) {
-		rpc := NewServer(WithServerJavaScriptClient())
+		rpc := newTestServer(WithServerJavaScriptClient())
 
 		rpc.Register(&TestService1{})
 		rpc.Register(&TestService2{})
@@ -483,7 +487,7 @@ func TestServerOptions(t *testing.T) {
 	})
 
 	t.Run("not serve javascript client", func(t *testing.T) {
-		rpc := NewServer()
+		rpc := newTestServer()
 
 		rpc.Register(&TestService1{})
 		rpc.Register(&TestService2{})
@@ -497,5 +501,19 @@ func TestServerOptions(t *testing.T) {
 		defer res.Body.Close()
 
 		assertEqual(t, http.StatusNotFound, res.StatusCode)
+	})
+
+	t.Run("logger", func(t *testing.T) {
+		rpc := newTestServer()
+
+		var called bool
+		rpc.methodLogger = makeMethodLogger(func(format string, a ...any) (n int, err error) {
+			called = true
+			return 0, nil
+		})
+
+		rpc.Register(&TestService1{})
+
+		assertEqual(t, called, true)
 	})
 }
