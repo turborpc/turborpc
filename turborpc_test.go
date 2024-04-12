@@ -411,6 +411,53 @@ func TestServerErrors(t *testing.T) {
 
 		assertEqual(t, http.StatusInternalServerError, res.StatusCode)
 	})
+
+	t.Run("filtered error", func(t *testing.T) {
+		e := "filtered error"
+		rpc := NewServer(WithErrorFilter(func(err error) error {
+			return errors.New(e)
+		}))
+
+		rpc.Register(&TestService1{})
+
+		input := "an error"
+		req := httptest.NewRequest(http.MethodPost, "/?service=TestService1&method=Error", strings.NewReader(fmt.Sprintf("%q", input)))
+		w := httptest.NewRecorder()
+
+		rpc.ServeHTTP(w, req)
+
+		res := w.Result()
+		defer res.Body.Close()
+
+		assertEqual(t, http.StatusBadRequest, res.StatusCode)
+
+		o := MustUnmarshalJSON[errorResponse](res.Body)
+
+		assertEqual(t, e, o.Message)
+	})
+
+	t.Run("filtered error default", func(t *testing.T) {
+		rpc := NewServer(WithErrorFilter(func(err error) error {
+			return nil
+		}))
+
+		rpc.Register(&TestService1{})
+
+		input := "an error"
+		req := httptest.NewRequest(http.MethodPost, "/?service=TestService1&method=Error", strings.NewReader(fmt.Sprintf("%q", input)))
+		w := httptest.NewRecorder()
+
+		rpc.ServeHTTP(w, req)
+
+		res := w.Result()
+		defer res.Body.Close()
+
+		assertEqual(t, http.StatusBadRequest, res.StatusCode)
+
+		o := MustUnmarshalJSON[errorResponse](res.Body)
+
+		assertEqual(t, ErrMethodErrored.Error(), o.Message)
+	})
 }
 
 func TestServerOptions(t *testing.T) {

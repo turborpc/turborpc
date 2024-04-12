@@ -37,6 +37,7 @@ var (
 	ErrReservedServiceName = errors.New("this service name is reserved")
 	ErrInvalidService      = errors.New("service must have one or more exported methods")
 	ErrServiceRegistered   = errors.New("service name already registered")
+	ErrMethodErrored       = errors.New("method errored")
 )
 
 var (
@@ -61,8 +62,20 @@ func WithServerJavaScriptClient() ServerOption {
 	}
 }
 
+// WithErrorFilter sets the error filter function for the server.
+// It can be used to modify errors returned by the server.
+// The server will return ErrMethodErrored if the filter returns nil.
+// By default no error filter is set and errors are returned as is from the
+// server.
+func WithErrorFilter(filter func(err error) error) ServerOption {
+	return func(r *Server) {
+		r.errorFilter = filter
+	}
+}
+
 // Server represents an RPC Server.
 type Server struct {
+	errorFilter func(err error) error
 	services    map[string]*service
 	serveClient clientGenerator
 }
@@ -70,7 +83,8 @@ type Server struct {
 // NewServer returns a new Server with options applied.
 func NewServer(options ...ServerOption) *Server {
 	rpc := &Server{
-		services: make(map[string]*service),
+		errorFilter: nil,
+		services:    make(map[string]*service),
 	}
 
 	for _, o := range options {
@@ -166,6 +180,11 @@ func Error(w http.ResponseWriter, error string, code int) {
 }
 
 func httpError(w http.ResponseWriter, code int, err error) {
+	if err == nil {
+		Error(w, ErrMethodErrored.Error(), code)
+		return
+	}
+
 	Error(w, err.Error(), code)
 }
 
@@ -227,7 +246,11 @@ func (rpc *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, errEncodingOutput):
 			httpError(w, http.StatusInternalServerError, err)
 		default:
-			httpError(w, http.StatusBadRequest, err)
+			if rpc.errorFilter != nil {
+				httpError(w, http.StatusBadRequest, rpc.errorFilter(err))
+			} else {
+				httpError(w, http.StatusBadRequest, err)
+			}
 		}
 
 		return
