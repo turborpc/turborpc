@@ -444,7 +444,11 @@ const URL = %q;
 				os.Remove(filePath)
 			})
 
-			output, err := execWithOutput("ts-node", filePath)
+			_, err = execWithOutput("tsc", "--lib", "ES2015,dom", "--noEmit", "--strict", filePath)
+
+			assertNoError(t, err)
+
+			output, err := execWithOutput("tsx", filePath)
 
 			assertNoError(t, err)
 
