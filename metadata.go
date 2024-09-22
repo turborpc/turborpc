@@ -1,6 +1,8 @@
 package turborpc
 
 import (
+	"crypto/sha1"
+	"fmt"
 	"reflect"
 	"sort"
 )
@@ -18,12 +20,14 @@ type methodMetadata struct {
 type serviceMetadata struct {
 	Name    string
 	Methods []methodMetadata
+	Version string
 }
 
 // serverMetadata metadata describing a server.
 type serverMetadata struct {
 	Name     string
 	Services []serviceMetadata
+	Version  string
 }
 
 // types get all method types, both input and output.
@@ -61,6 +65,7 @@ func (s *service) metadata() serviceMetadata {
 	return serviceMetadata{
 		Name:    s.name,
 		Methods: ms,
+		Version: s.version,
 	}
 }
 
@@ -78,5 +83,42 @@ func (rpc *Server) metadata() serverMetadata {
 	return serverMetadata{
 		Name:     defaultRPCClassName,
 		Services: ss,
+		Version:  rpc.version,
 	}
+}
+
+func calculateMethodVersion(md methodMetadata) string {
+	hash := sha1.New()
+	hash.Write([]byte(md.Name))
+
+	if md.Input != nil {
+		hash.Write([]byte(md.Input.String()))
+	}
+
+	if md.Output != nil {
+		hash.Write([]byte(md.Output.String()))
+	}
+
+	return fmt.Sprintf("%x", hash.Sum(nil))
+}
+
+func calculateServiceVersion(md serviceMetadata) string {
+	hash := sha1.New()
+	hash.Write([]byte(md.Name))
+
+	for _, m := range md.Methods {
+		hash.Write([]byte(calculateMethodVersion(m)))
+	}
+
+	return fmt.Sprintf("%x", hash.Sum(nil))
+}
+
+func calculateServerVersion(md serverMetadata) string {
+	hash := sha1.New()
+
+	for _, smd := range md.Services {
+		hash.Write([]byte(calculateServiceVersion(smd)))
+	}
+
+	return fmt.Sprintf("%x", hash.Sum(nil))
 }

@@ -28,12 +28,19 @@ function reviver(key: string, value: any): Date | any {
 	return new Date(timestamp);
 }
 
-async function call(url: string, service: string, method: string, input: any, headers?: HeadersInit): Promise<unknown> {
+async function call(url: string, service: string, method: string, input: any, headers?: HeadersInit, clientVersion?: string, onVersionMismatch?: (clientVersion: string, serverVersion: string) => void): Promise<unknown> {
 	const res = await fetch(url + "?service=" + service + "&method=" + method, {
 		method: "POST",
 		headers: headers,
 		body: JSON.stringify(input)
 	});
+
+	const serverVersion = res.headers.get("X-Server-Version");
+	const isMismatched = serverVersion && clientVersion && clientVersion !== serverVersion;
+
+	if (typeof onVersionMismatch == "function" && isMismatched) {
+		onVersionMismatch(clientVersion, serverVersion);
+	}
 
 	const text = await res.text();
 	const data = JSON.parse(text, reviver);
@@ -54,11 +61,16 @@ async function call(url: string, service: string, method: string, input: any, he
 {{range .Metadata.Services}}
 export class {{.Name}} {
 	name: string;
+	version: string;
+	clientVersion: string;
 	url: string;
 	headers?: HeadersInit;
+	onVersionMismatch?: (clientVersion: string, serverVersion: string) => void;
 
 	constructor(url: string, headers?: HeadersInit) {
 		this.name = "{{.Name}}";
+		this.version = "{{.Version}}";
+		this.clientVersion = "{{$.Metadata.Version}}";
 		this.url = url;
 		this.headers = headers;
 	}
@@ -66,9 +78,9 @@ export class {{.Name}} {
 	{{range .Methods -}}
 	async {{camelCase .Name}}{{if (isVoid .Input)}}(){{else}}(input: {{typeOf .Input}}){{end}}{{if not (isVoid .Output)}}: Promise<{{typeOf .Output}}>{{end}} {
 		{{if (isVoid .Output) -}}
-		await call(this.url, this.name, "{{.Name}}", {{if (isVoid .Input)}}null{{else}}input{{end}}, this.headers);
+		await call(this.url, this.name, "{{.Name}}", {{if (isVoid .Input)}}null{{else}}input{{end}}, this.headers, this.clientVersion, this.onVersionMismatch);
 		{{- else -}}
-		return call(this.url, this.name, "{{.Name}}", {{if (isVoid .Input)}}null{{else}}input{{end}}, this.headers) as Promise<{{typeOf .Output}}>;
+		return call(this.url, this.name, "{{.Name}}", {{if (isVoid .Input)}}null{{else}}input{{end}}, this.headers, this.clientVersion, this.onVersionMismatch) as Promise<{{typeOf .Output}}>;
 		{{- end}}
 	}
 	{{end}}
@@ -76,19 +88,27 @@ export class {{.Name}} {
 {{end}}
 
 export class {{.Metadata.Name}} {
+	version: string;
 	url: string;
 	headers?: HeadersInit;
+	onVersionMismatch?: (clientVersion: string, serverVersion: string) => void;
 
 	{{range .Metadata.Services -}}
 	{{camelCase .Name}}: {{.Name}};
-	{{- end}}
+	{{end -}}
 
 	constructor(url: string, headers?: HeadersInit) {
+		this.version = "{{.Metadata.Version}}";
 		this.url = url;
 		this.headers = headers;
 
 		{{range .Metadata.Services -}}
 		this.{{camelCase .Name}} = new {{.Name}}(url, headers);
-		{{- end}}
+		this.{{camelCase .Name}}.onVersionMismatch = (clientVersion, serverVersion) => {
+			if (this.onVersionMismatch) {
+				this.onVersionMismatch(clientVersion, serverVersion);
+			}
+		};
+		{{end -}}
 	}
 }

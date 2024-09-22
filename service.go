@@ -12,6 +12,7 @@ var (
 
 type service struct {
 	name    string
+	version string
 	typ     reflect.Type
 	value   reflect.Value
 	methods map[string]*method
@@ -38,6 +39,8 @@ func newService(name string, typ reflect.Type, value reflect.Value, logger func(
 			logger(s.name, m.Name)
 		}
 	}
+
+	s.version = calculateServiceVersion(s.metadata())
 
 	return s
 }

@@ -36,12 +36,19 @@ function reviver(key, value) {
  * @param {any} input
  * @returns {Promise<unknown>}
  */
-async function call(url, headers, service, method, input) {
+async function call(url, headers, service, method, input, clientVersion, onVersionMismatch) {
 	const res = await fetch(url + "?service=" + service + "&method=" + method, {
 		method: "POST",
 		headers: headers,
 		body: JSON.stringify(input)
 	});
+
+	const serverVersion = res.headers.get("X-Server-Version");
+	const isMismatched = serverVersion && clientVersion && clientVersion !== serverVersion;
+
+	if (typeof onVersionMismatch == "function" && isMismatched) {
+		onVersionMismatch(clientVersion, serverVersion);
+	}
 
 	const text = await res.text();
 	const data = JSON.parse(text, reviver);
@@ -59,6 +66,8 @@ async function call(url, headers, service, method, input) {
 class {{.Name}} {
 	constructor(url, headers) {
 		this.name = "{{.Name}}";
+		this.version = "{{.Version}}";
+		this.clientVersion = "{{$.Metadata.Version}}";
 		this.url = url;
 		this.headers = headers;
 	}
@@ -71,7 +80,7 @@ class {{.Name}} {
 	*/
 	{{end -}}
 	{{camelCase .Name}}{{if (isVoid .Input)}}(){{else}}(input){{end}} {
-		return {{if not (isVoid .Output)}}/** @type {Promise<{{typeOf .Output}}>} */{{end}}(call(this.url, this.headers, this.name, "{{.Name}}", {{if (isVoid .Input)}}null{{else}}input{{end}}));
+		return {{if not (isVoid .Output)}}/** @type {Promise<{{typeOf .Output}}>} */{{end}}(call(this.url, this.headers, this.name, "{{.Name}}", {{if (isVoid .Input)}}null{{else}}input{{end}}, this.clientVersion, this.onVersionMismatch));
 	}
 	{{end}}
 }
@@ -79,8 +88,14 @@ class {{.Name}} {
 
 class {{.Metadata.Name}} {
 	constructor(url, headers) {
+		this.version = "{{.Metadata.Version}}";
 		{{range .Metadata.Services -}}
 		this.{{camelCase .Name}} = new {{.Name}}(url, headers);
-		{{- end}}
+		this.{{camelCase .Name}}.onVersionMismatch = (clientVersion, serverVersion) => {
+			if (typeof this.onVersionMismatch === "function") {
+				this.onVersionMismatch(clientVersion, serverVersion);
+			}
+		};
+		{{end -}}
 	}
 }

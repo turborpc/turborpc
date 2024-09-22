@@ -175,6 +175,51 @@ func TestGeneratedJavaScriptClient(t *testing.T) {
 			code:   `call(URL, {}, "TestService1", "Error", "test").catch((e) => console.log(e instanceof RPCError))`,
 			output: `true`,
 		},
+		{
+			desc: "version",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `console.log((new RPC(URL)).version)`,
+			output: `945207096c94fdab57aab31ff408884c46daebe9`,
+		},
+		{
+			desc: "version mismatch",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, {}, "TestService1", "Three", 0, "wrong version", () => console.log("mismatch"))`,
+			output: "mismatch",
+		},
+		{
+			desc: "no version mismatch",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, {}, "TestService1", "Three", 0, "945207096c94fdab57aab31ff408884c46daebe9", () => console.log("no mismatch"))`,
+			output: "",
+		},
+		{
+			desc: "unified rpc version mismatch",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `const rpc = new RPC(URL); rpc.testService1.clientVersion = "wrong version"; rpc.onVersionMismatch = () => console.log("mismatch"); rpc.testService1.three(0);`,
+			output: "mismatch",
+		},
+		{
+			desc: "no unified rpc version mismatch",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `const rpc = new RPC(URL); rpc.onVersionMismatch = () => console.log("no mismatch"); rpc.testService1.three(0);`,
+			output: "",
+		},
 	}
 
 	for _, tC := range testCases {
@@ -309,6 +354,51 @@ func TestGeneratedTypeScriptClient(t *testing.T) {
 			},
 			code:   `call(URL, "TestService1", "Error", "test").catch((e) => console.log(e instanceof RPCError))`,
 			output: `true`,
+		},
+		{
+			desc: "version",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `console.log((new RPC(URL)).version)`,
+			output: `945207096c94fdab57aab31ff408884c46daebe9`,
+		},
+		{
+			desc: "version mismatch",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, "TestService1", "Three", 0, undefined, "wrong version", () => console.log("mismatch"))`,
+			output: "mismatch",
+		},
+		{
+			desc: "no version mismatch",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `call(URL, "TestService1", "Three", 0, undefined, "945207096c94fdab57aab31ff408884c46daebe9", () => console.log("no mismatch"))`,
+			output: "",
+		},
+		{
+			desc: "unified rpc version mismatch",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `const rpc = new RPC(URL); rpc.testService1.clientVersion = "wrong version"; rpc.onVersionMismatch = () => console.log("mismatch"); rpc.testService1.three(0);`,
+			output: "mismatch",
+		},
+		{
+			desc: "no unified rpc version mismatch",
+			services: []any{
+				&TestService1{},
+				&TestService2{},
+			},
+			code:   `const rpc = new RPC(URL); rpc.onVersionMismatch = () => console.log("no mismatch"); rpc.testService1.three(0);`,
+			output: "",
 		},
 	}
 

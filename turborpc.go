@@ -92,6 +92,7 @@ type Server struct {
 	methodLogger func(service, method string)
 	services     map[string]*service
 	serveClient  clientGenerator
+	version      string
 }
 
 // NewServer returns a new Server with options applied.
@@ -152,6 +153,8 @@ func (rpc *Server) RegisterName(name string, r any) error {
 	}
 
 	rpc.services[name] = newService(name, typ, reflect.ValueOf(r), rpc.methodLogger)
+
+	rpc.version = calculateServerVersion(rpc.metadata())
 
 	return nil
 }
@@ -232,6 +235,8 @@ func (rpc *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+
+	w.Header().Set("X-Server-Version", rpc.version)
 
 	service := r.URL.Query().Get("service")
 	if service == "" {

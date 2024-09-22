@@ -184,6 +184,36 @@ func TestServer(t *testing.T) {
 
 		assertEqual(t, input, output)
 	})
+
+	t.Run("server version stability", func(t *testing.T) {
+		rpc1 := newTestServer()
+
+		rpc1.Register(&TestService1{})
+		rpc1.Register(&TestService2{})
+
+		rpc2 := newTestServer()
+
+		rpc2.Register(&TestService1{})
+		rpc2.Register(&TestService2{})
+
+		assertEqual(t, rpc1.version, rpc2.version)
+	})
+
+	t.Run("server version", func(t *testing.T) {
+		rpc := newTestServer()
+
+		rpc.Register(&TestService1{})
+
+		req := httptest.NewRequest(http.MethodPost, "/?service=TestService1&method=One", nil)
+		w := httptest.NewRecorder()
+
+		rpc.ServeHTTP(w, req)
+
+		res := w.Result()
+		defer res.Body.Close()
+
+		assertEqual(t, rpc.version, res.Header.Get("X-Server-Version"))
+	})
 }
 
 func TestServerErrors(t *testing.T) {
