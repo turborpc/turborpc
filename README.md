@@ -2,7 +2,7 @@
 
 ![logo](./logo.png)
 
-TurboRPC: Full-Stack Type Safety Without The Work
+Full-Stack Type Safety Without The Work
 
 ![demo](./demo.gif)
 
@@ -32,37 +32,42 @@ go get github.com/turborpc/turborpc
 package main
 
 import (
-    "context"
-    "net/http"
-    "sync/atomic"
+	"context"
+	"net/http"
+	"sync/atomic"
 
-    "github.com/turborpc/turborpc"
+	"github.com/turborpc/turborpc"
 )
 
 type Counter atomic.Int64
 
 func (c *Counter) Add(ctx context.Context, delta int64) (int64, error) {
-    return (*atomic.Int64)(c).Add(delta), nil
+	return (*atomic.Int64)(c).Add(delta), nil
+}
+
+func (c *Counter) Zero(ctx context.Context) (int64, error) {
+	return (*atomic.Int64)(c).Swap(0), nil
 }
 
 func main() {
-    rpc := turborpc.NewServer()
+	rpc := turborpc.NewServer()
 
-    _ = rpc.Register(&Counter{})
+	_ = rpc.Register(&Counter{})
 
-    rpc.WriteTypeScriptClient("client.ts")
+	rpc.WriteTypeScriptClient("client.ts")
 
-    http.Handle("/rpc", rpc)
+	http.Handle("/rpc", rpc)
 
-    http.ListenAndServe(":3000", nil)
+	http.ListenAndServe(":3000", nil)
 }
 ```
 
 ```typescript
-import { Counter } from "./client.ts";
+import { Counter } from "./client";
 
 const rpc = new Counter("http://localhost:3000/rpc");
 const newValue = await rpc.add(1); // Fully typed!!
+await rpc.zero(1); // Type error!!
 ```
 
 ## Documentation
