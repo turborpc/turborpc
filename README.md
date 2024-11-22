@@ -2,7 +2,7 @@
 
 ![logo](./logo.png)
 
-TurboRPC: Combination of [tRPC](https://trpc.io) and [net/rpc](https://pkg.go.dev/net/rpc). Run Fast, Move Fast, Break Nothing.
+TurboRPC: Full-Stack Type Safety Without The Work
 
 ![demo](./demo.gif)
 
@@ -12,15 +12,19 @@ TurboRPC: Combination of [tRPC](https://trpc.io) and [net/rpc](https://pkg.go.de
 
 </div>
 
----
+## Why TurboRPC?
 
-Write Go methods, get a type safe client for your frontend.
+- ⚡️ **Zero Boilerplate** - Write normal Go methods, get a TypeScript client
+- 🔒 **Type Safety** - Full end-to-end type safety between Go and TypeScript
+- 🚀 **Developer Experience** - No code generation steps or build processes
+- 🔌 **Drop-in Integration** - Works with standard `net/http` - no special setup
+- 📦 **Zero Dependencies** - Uses only Go standard library
 
-Services are just Go objects with methods on the form `func (s Service) Method(ctx context.Context, input Input) (Output, error)`.
+## Installation
 
-By using Go's built in reflection these services can be accessed over HTTP in a type safe manner from a generated TypeScript client.
-
-**WARNING** TurboRPC is pre-alpha software, use with caution.
+```bash
+go get github.com/turborpc/turborpc
+```
 
 ## Example
 
@@ -42,39 +46,30 @@ func (c *Counter) Add(ctx context.Context, delta int64) (int64, error) {
 }
 
 func main() {
-    rpc := turborpc.NewServer(turborpc.WithServerJavaScriptClient())
+    rpc := turborpc.NewServer()
 
     _ = rpc.Register(&Counter{})
 
+    rpc.WriteTypeScriptClient("client.ts")
+
     http.Handle("/rpc", rpc)
-
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        w.Write([]byte(`
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Counter</title>
-  <script src="/rpc"></script>
-</head>
-<body>
-  <strong id="count"></strong>
-  <button id="plus">+</button>
-  <button id="minus">-</button>
-  <script>
-    const rpc = new Counter("/rpc");
-
-    const setCount = (v) => document.getElementById("count").innerText = v;
-    document.getElementById("plus").onclick = () => rpc.add(1).then(setCount);
-    document.getElementById("minus").onclick = () => rpc.add(-1).then(setCount);
-
-    rpc.add(0).then(setCount);
-  </script>
-</body>
-        `))
-    })
 
     http.ListenAndServe(":3000", nil)
 }
 ```
 
-## [More Examples](https://github.com/turborpc/examples)
+```typescript
+import { Counter } from "./client.ts";
+
+const rpc = new Counter("http://localhost:3000/rpc");
+const newValue = await rpc.add(1); // Fully typed!!
+```
+
+## Documentation
+
+- [API Reference](https://godoc.org/github.com/turborpc/turborpc)
+- [Examples Repository](https://github.com/turborpc/examples)
+
+## Status
+
+⚠️ **Warning**: TurboRPC is currently in pre-alpha. Please use with caution in production environments.
