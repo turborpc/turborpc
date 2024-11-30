@@ -52,9 +52,9 @@ func (c *Counter) Zero(ctx context.Context) (int64, error) {
 func main() {
     rpc := turborpc.NewServer()
 
-    _ = rpc.Register(&Counter{})
+    rpc.MustRegister(&Counter{})
 
-    rpc.WriteTypeScriptClient("client.ts")
+    rpc.MustWriteTypeScriptClient("client.ts")
 
     http.Handle("/rpc", rpc)
 

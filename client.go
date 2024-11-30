@@ -85,6 +85,14 @@ func (rpc *Server) WriteTypeScriptClient(filePath string) error {
 	return rpc.writeClientSourceCode(newTypeScriptClient(), filePath)
 }
 
+// MustWriteTypeScriptClient generates a TypeScript client and writes it to the specified file path.
+// If an error occurs during the generation or writing process, it will panic.
+func (rpc *Server) MustWriteTypeScriptClient(filePath string) {
+	if err := rpc.WriteTypeScriptClient(filePath); err != nil {
+		panic(err)
+	}
+}
+
 // JavaScriptClient returns source code for a JavaScript client.
 func (rpc *Server) JavaScriptClient() string {
 	return rpc.clientSourceCode(newJavaScriptClient())
@@ -93,6 +101,14 @@ func (rpc *Server) JavaScriptClient() string {
 // WriteJavaScriptClient writes a JavaScript client to a file.
 func (rpc *Server) WriteJavaScriptClient(filePath string) error {
 	return rpc.writeClientSourceCode(newJavaScriptClient(), filePath)
+}
+
+// MustWriteJavaScriptClient generates a JavaScript client and writes it to the specified file path.
+// If an error occurs during the generation or writing process, it will panic.
+func (rpc *Server) MustWriteJavaScriptClient(filePath string) {
+	if err := rpc.WriteJavaScriptClient(filePath); err != nil {
+		panic(err)
+	}
 }
 
 func isVoid(typ reflect.Type) bool {

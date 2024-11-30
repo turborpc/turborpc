@@ -135,6 +135,15 @@ func (rpc *Server) Register(rcvr any) error {
 	return rpc.RegisterName(findServiceName(reflect.TypeOf(rcvr)), rcvr)
 }
 
+// MustRegister registers a receiver with the server using a service name
+// derived from the receiver's type. If the registration fails, it panics with
+// the encountered error.
+func (rpc *Server) MustRegister(rcvr any) {
+	if err := rpc.RegisterName(findServiceName(reflect.TypeOf(rcvr)), rcvr); err != nil {
+		panic(err)
+	}
+}
+
 // RegisterName is like Register but uses the provided name for the service
 // instead of inferring it from the receiver's type.
 func (rpc *Server) RegisterName(name string, r any) error {
