@@ -13,7 +13,7 @@ class RPCError extends Error {
 	}
 }
 
-function reviver(key: string, value: any): Date | any {
+function reviver(_: string, value: any): Date | any {
 	if (typeof value !== "string" || !value.startsWith(datePrefix)) {
 		return value;
 	}
@@ -28,7 +28,7 @@ function reviver(key: string, value: any): Date | any {
 	return new Date(timestamp);
 }
 
-async function call(url: string, service: string, method: string, input: any, headers?: HeadersInit, clientVersion?: string, onVersionMismatch?: (clientVersion: string, serverVersion: string) => void): Promise<unknown> {
+async function call(url: string, service: string, method: string, input: any, headers?: HeadersInit | undefined, clientVersion?: string, onVersionMismatch?: (clientVersion: string, serverVersion: string) => void): Promise<unknown> {
 	const res = await fetch(url + "?service=" + service + "&method=" + method, {
 		method: "POST",
 		headers: headers,
@@ -64,10 +64,10 @@ export class {{.Name}} {
 	version: string;
 	clientVersion: string;
 	url: string;
-	headers?: HeadersInit;
+	headers?: HeadersInit | undefined;
 	onVersionMismatch?: (clientVersion: string, serverVersion: string) => void;
 
-	constructor(url: string, headers?: HeadersInit) {
+	constructor(url: string, headers?: HeadersInit | undefined) {
 		this.name = "{{.Name}}";
 		this.version = "{{.Version}}";
 		this.clientVersion = "{{$.Metadata.Version}}";
@@ -90,14 +90,14 @@ export class {{.Name}} {
 export class {{.Metadata.Name}} {
 	version: string;
 	url: string;
-	headers?: HeadersInit;
+	headers?: HeadersInit | undefined;
 	onVersionMismatch?: (clientVersion: string, serverVersion: string) => void;
 
 	{{range .Metadata.Services -}}
 	{{camelCase .Name}}: {{.Name}};
 	{{end -}}
 
-	constructor(url: string, headers?: HeadersInit) {
+	constructor(url: string, headers?: HeadersInit | undefined) {
 		this.version = "{{.Metadata.Version}}";
 		this.url = url;
 		this.headers = headers;

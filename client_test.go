@@ -444,9 +444,7 @@ const URL = %q;
 				os.Remove(filePath)
 			})
 
-			_, err = execWithOutput("tsc", "--lib", "ES2015,dom", "--noEmit", "--strict", filePath)
-
-			assertNoError(t, err)
+			typeCheckFile(t, "./tsconfig.json", filePath)
 
 			output, err := execWithOutput("tsx", filePath)
 
@@ -459,4 +457,21 @@ const URL = %q;
 			}
 		})
 	}
+}
+
+func typeCheckFile(t *testing.T, tsConfigFilePath, filePath string) {
+	t.Helper()
+
+	cfg := fmt.Sprintf(`{"extends": %q, "files": [%q], "compilerOptions": {"noEmit": true}}`, tsConfigFilePath, filePath)
+
+	fileName := fmt.Sprintf("tsconfig-%d.json", rand.Int())
+	err := os.WriteFile(fileName, []byte(cfg), 0600)
+	assertNoError(t, err)
+
+	t.Cleanup(func() {
+		os.Remove(fileName)
+	})
+
+	_, err = execWithOutput("tsc", "-p", fileName)
+	assertNoError(t, err)
 }
