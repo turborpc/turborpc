@@ -431,6 +431,7 @@ interface HeadersInit {
 declare function fetch(url: string, input: object): Promise<Response>;
 %s
 
+// @ts-ignore
 const URL = %q;
 
 %s
