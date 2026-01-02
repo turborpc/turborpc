@@ -2,7 +2,7 @@
 
 ![logo](./logo.png)
 
-Full-Stack Type Safety Without The Work
+Full-Stack Go to TypeScript Type Safety.
 
 ![demo](./demo.gif)
 
@@ -11,14 +11,6 @@ Full-Stack Type Safety Without The Work
 [![Go Report Card](https://goreportcard.com/badge/github.com/turborpc/turborpc)](https://goreportcard.com/report/github.com/turborpc/turborpc)
 
 </div>
-
-## Why TurboRPC?
-
-- ⚡️ **Zero Boilerplate** - Write normal Go methods, get a TypeScript client
-- 🔒 **Type Safety** - Full end-to-end type safety between Go and TypeScript
-- 🚀 **Developer Experience** - No code generation steps or build processes
-- 🔌 **Drop-in Integration** - Works with standard `net/http` - no special setup
-- 📦 **Zero Dependencies** - Uses only Go standard library
 
 ## Installation
 
@@ -75,6 +67,6 @@ await rpc.zero(1); // Type error!!
 - [API Reference](https://godoc.org/github.com/turborpc/turborpc)
 - [Examples Repository](https://github.com/turborpc/examples)
 
-## Status
+## License
 
-⚠️ **Warning**: TurboRPC is currently in pre-alpha. Please use with caution in production environments.
+MIT License. See the [LICENSE](LICENSE) file for details.
