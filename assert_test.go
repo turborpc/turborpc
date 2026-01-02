@@ -7,6 +7,8 @@ import (
 )
 
 func assertEqual[T comparable](t *testing.T, a T, b T, msgAndArgs ...any) bool {
+	t.Helper()
+
 	if a != b {
 		t.Fatalf("%v != %v: %s", a, b, messageFromMsgAndArgs(msgAndArgs...))
 	}
@@ -15,14 +17,18 @@ func assertEqual[T comparable](t *testing.T, a T, b T, msgAndArgs ...any) bool {
 }
 
 func assertNoError(t *testing.T, err error, msgAndArgs ...any) bool {
+	t.Helper()
+
 	if err != nil {
-		t.Fatalf(messageFromMsgAndArgs(msgAndArgs...))
+		t.Fatalf(messageFromMsgAndArgs(msgAndArgs...), err)
 	}
 
 	return true
 }
 
 func assertErrorIs(t *testing.T, expected error, value error, msgAndArgs ...any) bool {
+	t.Helper()
+
 	if !errors.Is(value, expected) {
 		t.Fatalf(messageFromMsgAndArgs(msgAndArgs...))
 	}
